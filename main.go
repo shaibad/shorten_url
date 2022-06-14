@@ -5,7 +5,7 @@ import (
     "log"
     "encoding/json"
     "net/http"
-    "io/ioutil"
+    // "io/ioutil"
     "github.com/gorilla/mux"
     "golang.org/x/crypto/bcrypt"
     "github.com/jcoene/go-base62"
@@ -31,9 +31,9 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     }
 
     if _, ok := longToShortMap[body.Url]; ok {
-        log.Println("Error, url already exists!")
+        log.Println("Url already exists, returning its value!")
         w.WriteHeader(http.StatusOK)
-        w.Write([]byte("Error, url already exists!"))
+        w.Write([]byte(longToShortMap[body.Url]))
         return
     }
 
@@ -57,13 +57,14 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
 }
 
 func GetUrl(w http.ResponseWriter, r *http.Request){
-    shortUrlBytes, err := ioutil.ReadAll(r.Body)
-    if err != nil {
-        log.Println("Error while trying to hash", err)
-    }
-    log.Println(string(shortUrlBytes))
+    // shortUrlBytes, _ := ioutil.ReadAll(r.Body)
+    // shortUrl, err := ioutil.ReadAll(r.URL)
+
+    url := r.URL.Query()["url"][0]
+    log.Println(url)
+    // log.Println(string(shortUrlBytes))
     
-    shortUrlStr := string(shortUrlBytes)
+    shortUrlStr := string(url)
     // Check if mapping exists
     if _, ok := shortToLongMap[shortUrlStr]; ok {
         w.WriteHeader(http.StatusOK)
