@@ -38,7 +38,7 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     }
 
     valueToHash := []byte(body.Url)
-    
+
     // Hash original URL
     hash, err := bcrypt.GenerateFromPassword(valueToHash, bcrypt.DefaultCost)
     if err != nil {
@@ -53,7 +53,7 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     shortToLongMap[shorterValue] = body.Url // To use in Get request
 
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Suceess"))
+    w.Write([]byte(shorterValue))
 }
 
 func GetUrl(w http.ResponseWriter, r *http.Request){
@@ -65,9 +65,9 @@ func GetUrl(w http.ResponseWriter, r *http.Request){
     
     shortUrlStr := string(shortUrlBytes)
     // Check if mapping exists
-    if _, ok := longToShortMap[shortUrlStr]; ok {
+    if _, ok := shortToLongMap[shortUrlStr]; ok {
         w.WriteHeader(http.StatusOK)
-        w.Write([]byte(longToShortMap[shortUrlStr]))
+        w.Write([]byte(shortToLongMap[shortUrlStr]))
     } else {
         w.WriteHeader(http.StatusBadRequest)
         w.Write([]byte("Error, url not found!"))
