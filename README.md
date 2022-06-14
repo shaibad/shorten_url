@@ -35,3 +35,9 @@ Output:
 ```json
 {"Url":"https://recolabs.dev"}
 ```
+
+Response for URL that doesn't exist:
+```json
+{"Message":"Url not found","Status":"Error"}
+```
+
