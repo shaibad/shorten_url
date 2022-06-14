@@ -12,10 +12,12 @@ import (
     "math/big"
 )
 
+// Struct to represent a url
 type Url struct {
     Url string
 }
 
+// Store maps between short and long urls
 var longToShortMap = make(map[string]string)
 var shortToLongMap = make(map[string]string)
 
@@ -36,11 +38,14 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     }
 
     valueToHash := []byte(body.Url)
+    
+    // Hash original URL
     hash, err := bcrypt.GenerateFromPassword(valueToHash, bcrypt.DefaultCost)
     if err != nil {
         log.Println("Error while trying to hash", err)
     }
 
+    // Convert to Base 62 to allow correct url representation
     generatedNumber := new(big.Int).SetBytes(hash).Int64()
     shorterValue := base62.Encode(generatedNumber)
 
@@ -59,6 +64,7 @@ func GetUrl(w http.ResponseWriter, r *http.Request){
     log.Println(string(shortUrlBytes))
     
     shortUrlStr := string(shortUrlBytes)
+    // Check if mapping exists
     if _, ok := longToShortMap[shortUrlStr]; ok {
         w.WriteHeader(http.StatusOK)
         w.Write([]byte(longToShortMap[shortUrlStr]))
