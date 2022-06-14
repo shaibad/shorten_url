@@ -5,7 +5,6 @@ import (
     "log"
     "encoding/json"
     "net/http"
-    // "io/ioutil"
     "github.com/gorilla/mux"
     "golang.org/x/crypto/bcrypt"
     "github.com/jcoene/go-base62"
@@ -21,6 +20,24 @@ type Url struct {
 var longToShortMap = make(map[string]string)
 var shortToLongMap = make(map[string]string)
 
+func returnOK(w http.ResponseWriter, value string){
+    w.WriteHeader(http.StatusOK)
+    m := map[string]string{
+        "Status": "OK",
+        "Message": value,
+    }
+    json.NewEncoder(w).Encode(m)
+}
+
+func returnERR(w http.ResponseWriter, message string){
+    m := map[string]string{
+        "Status": "Error",
+        "Message": message,
+    }
+    w.WriteHeader(http.StatusBadRequest)
+    json.NewEncoder(w).Encode(m)
+}
+
 func ShortenUrl(w http.ResponseWriter, r *http.Request){
 
     var body Url
@@ -32,8 +49,7 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
 
     if _, ok := longToShortMap[body.Url]; ok {
         log.Println("Url already exists, returning its value!")
-        w.WriteHeader(http.StatusOK)
-        w.Write([]byte(longToShortMap[body.Url]))
+        returnOK(w, longToShortMap[body.Url])
         return
     }
 
@@ -43,6 +59,7 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     hash, err := bcrypt.GenerateFromPassword(valueToHash, bcrypt.DefaultCost)
     if err != nil {
         log.Println("Error while trying to hash", err)
+        returnERR(w, "Error while trying to hash")
     }
 
     // Convert to Base 62 to allow correct url representation
@@ -52,37 +69,32 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     longToShortMap[body.Url] = shorterValue
     shortToLongMap[shorterValue] = body.Url // To use in Get request
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(shorterValue))
+    returnOK(w, shorterValue)
 }
 
 func GetUrl(w http.ResponseWriter, r *http.Request){
-    // shortUrlBytes, _ := ioutil.ReadAll(r.Body)
-    // shortUrl, err := ioutil.ReadAll(r.URL)
-
     url := r.URL.Query()["url"][0]
-    log.Println(url)
-    // log.Println(string(shortUrlBytes))
-    
     shortUrlStr := string(url)
+    w.Header().Set("Content-Type", "application/json")
     // Check if mapping exists
     if _, ok := shortToLongMap[shortUrlStr]; ok {
         w.WriteHeader(http.StatusOK)
-        w.Write([]byte(shortToLongMap[shortUrlStr]))
+        var u Url
+        u.Url = shortToLongMap[shortUrlStr]
+        json.NewEncoder(w).Encode(u)
     } else {
-        w.WriteHeader(http.StatusBadRequest)
-        w.Write([]byte("Error, url not found!"))
+        returnERR(w, "Url not found")
     }
 }
 
 func handleRequests() {
 	
-    myRouter := mux.NewRouter().StrictSlash(true)
+    router := mux.NewRouter().StrictSlash(true)
 
-    myRouter.HandleFunc("/shorten_url", ShortenUrl).Methods("POST")
-    myRouter.HandleFunc("/get_url", GetUrl).Methods("GET")
+    router.HandleFunc("/shorten_url", ShortenUrl).Methods("POST")
+    router.HandleFunc("/get_url", GetUrl).Methods("GET")
 
-    log.Fatal(http.ListenAndServe(":10000", myRouter))
+    log.Fatal(http.ListenAndServe(":10000", router))
 }
 
 func main() {
