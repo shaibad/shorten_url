@@ -38,13 +38,19 @@ func returnERR(w http.ResponseWriter, message string){
     json.NewEncoder(w).Encode(m)
 }
 
-func ShortenUrl(w http.ResponseWriter, r *http.Request){
+func ShortenUrl(w http.ResponseWriter, r *http.Request) {
 
     var body Url
     err := json.NewDecoder(r.Body).Decode(&body)
 
     if err != nil {
         log.Println(err)
+    }
+
+    if body.Url == "" {
+        log.Println("Error, URL can't be empty")
+        returnERR(w, "URL can't be empty")
+        return
     }
 
     if _, ok := longToShortMap[body.Url]; ok {
@@ -60,6 +66,7 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
     if err != nil {
         log.Println("Error while trying to hash", err)
         returnERR(w, "Error while trying to hash")
+        return
     }
 
     // Convert to Base 62 to allow correct url representation
@@ -73,6 +80,13 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request){
 }
 
 func GetUrl(w http.ResponseWriter, r *http.Request){
+    urlParam := r.URL.Query()["url"]
+    if len(urlParam) == 0 {
+        log.Println("Error, URL param can't be empty")
+        returnERR(w, "URL param can't be empty")
+        return
+    }
+
     url := r.URL.Query()["url"][0]
     shortUrlStr := string(url)
     w.Header().Set("Content-Type", "application/json")
