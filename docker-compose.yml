@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  get_url:
+    build:
+      dockerfile: Dockerfile
+      context: ./get_url
+    ports:
+      - '8080:8080'
+    env_file:
+      - .env
+  shorten_url:
+    build:
+      dockerfile: Dockerfile
+      context: ./shorten_url
+    ports:
+      - '5000:5000'
+    env_file:
+      - .env
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - '6379:6379'
+  postgres:
+    image: "postgres:alpine"
+    container_name: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    env_file:
+      - .env
