@@ -1,4 +1,4 @@
-module get_url
+module url-shortener
 
 go 1.13
 

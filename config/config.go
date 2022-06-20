@@ -8,6 +8,12 @@ import (
 // Config is a general interfce for configuration types
 type Config interface{}
 
+type HandlerTypeConf struct {
+	Path string `envconfig:"HANDLER_PATH"`
+	Method string `envconfig:"HANDLER_METHOD"`
+	Port string `envconfig:"HANDLER_PORT"`
+}
+
 type BaseUrlConf struct {
 	Url string `envconfig:"BASE_URL"`
 	Protocol string `envconfig:"BASE_URL_PROTOCOL"`

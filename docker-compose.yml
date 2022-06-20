@@ -3,19 +3,27 @@ services:
   get_url:
     build:
       dockerfile: Dockerfile
-      context: ./get_url
+      context: .
     ports:
       - '8080:8080'
     env_file:
       - .env
+    environment:
+      - HANDLER_PATH=/{short}
+      - HANDLER_METHOD=GET
+      - HANDLER_PORT=8080
   shorten_url:
     build:
       dockerfile: Dockerfile
-      context: ./shorten_url
+      context: .
     ports:
       - '5000:5000'
     env_file:
       - .env
+    environment:
+      - HANDLER_PATH=/shorten_url
+      - HANDLER_METHOD=POST
+      - HANDLER_PORT=5000
   redis:
     image: "redis:alpine"
     container_name: redis

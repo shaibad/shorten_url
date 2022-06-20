@@ -1,40 +1,15 @@
-package helpers
+package db
 
 import (
 	"fmt"
 	"log"
-	"github.com/go-redis/redis"
-	"shorten_url/config"
-	"time"
 	"database/sql"
 	_ "github.com/lib/pq"
+
+	"url-shortener/config"
 )
 
-var redisClient *redis.Client
 var db *sql.DB
-
-func GetFromRedis(key string) (bool, string) {
-	val, err := redisClient.Get(key).Result()
-	if err != nil && err != redis.Nil {
-		log.Println(err)
-		return false, "Failed to get value from redis"
-	}
-	return true, val
-}
-
-func InsertToRedis(key string, value string) (bool) {
-	err := redisClient.Set(key, value, 0).Err()
-    if err != nil {
-		log.Println(err)
-		return false
-	}
-	_, err = redisClient.Expire(key, 1 * time.Hour).Result()
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	return true
-}
 
 func InsertToPostgres(tableName string, valueKeys [2]string, values [2]string) bool {
 	statement := fmt.Sprintf(`INSERT INTO %s (%s, %s) VALUES ($1, $2)`, tableName, valueKeys[0], valueKeys[1])
@@ -58,14 +33,6 @@ func GetFromPostgres(valueToSelect string, tableName string, pkey string, value 
 }
 
 func init() {
-	var RedisConf config.RedisConf
-	config.GetEnv(&RedisConf)
-    redisClient = redis.NewClient(&redis.Options{
-		Addr: RedisConf.Address,
-		Password: RedisConf.Password,
-		DB: 0,
-	})
-
 	var PostgresConf config.PostgresConf
 	var err error
 	config.GetEnv(&PostgresConf)
