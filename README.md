@@ -1,43 +1,43 @@
 ## Shorten URL system
 
 ### Descreption
-Basic prototype of shorten URL system (not persistent)
+A persistent URL shortener system
 
-### Build
-```bash
-docker build .
-```
 
 ### Run
+From the main directory, run:
 ```bash
-docker run -it -p 10000:10000 <container id>
+docker-compose up --build
 ```
 
 ### Endpoints
 
-/get_url (GET)
+/shorten_url (POST) - Generates a short url from a given URL and saves it
 
-/shorten_url (POST)
+/get_url (GET) - Redirects to the original URL
 
 ### Examples
 Shorten URL:
-```curl -X POST -d '{"Url":"https://recolabs.dev"}' localhost:10000/shorten_url```
+```curl -X POST -d '{"Url":"https://www.google.com"}' localhost:5000/shorten_url```
 
 Output:
 ```json
-{"Message":"7krJCv7nn5V","Status":"OK"}
+{
+    "Message": "http://localhost:8080/7PQTO2E",
+    "Status": "OK"
+}
 ```
 
 Get URL:
-```curl -X GET localhost:10000/get_url?url=7krJCv7nn5V```
-
-Output:
-```json
-{"Url":"https://recolabs.dev"}
-```
+Navigate to: http://localhost:8080/7PQTO2E
 
 Response for URL that doesn't exist:
 ```json
 {"Message":"Url not found","Status":"Error"}
 ```
 
+### Testing
+From tests directory, run:
+```bash
+go test -v
+```
