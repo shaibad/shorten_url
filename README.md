@@ -31,7 +31,7 @@ Output:
 Get URL:
 Navigate to: http://localhost:8080/7PQTO2E
 
-Response for URL that doesn't exist:
+Response for a URL that doesn't exist:
 ```json
 {"Message":"Url not found","Status":"Error"}
 ```
