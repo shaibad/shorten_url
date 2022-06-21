@@ -2,12 +2,12 @@ package handlers
 
 import (
     "log"
+    "time"
     "encoding/json"
     "net/http"
 
     "url-shortener/config"
     "url-shortener/helpers"
-    "url-shortener/db"
 )
 
 // Struct to represent a url
@@ -34,17 +34,17 @@ func ShortenUrlHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // Try to get short URL value from Redis - return if it exists
-    ok, val := db.GetFromRedis(body.Url)
-    if !ok {
+    val, err := redisClient.Get(body.Url)
+    if err != nil {
         helpers.ReturnERR(w, val, nil)
         return
     }
 
     // Value is not on redis - try to fetch from DB
     if val == "" {
-        ok, val = db.GetFromPostgres("short", "url_to_short", "real_url", body.Url)
-        if !ok {
-            helpers.ReturnERR(w, val, nil)
+        val, err = dbClient.FindByPkey("short", "url_to_short", "real_url", body.Url)
+        if err != nil {
+            helpers.ReturnERR(w, val, err)
             return
         }
     }
@@ -53,27 +53,28 @@ func ShortenUrlHandler(w http.ResponseWriter, r *http.Request) {
         helpers.ReturnOK(w, baseShorterUrl + val)
     } else {
         // Generate short URL
-        ok, shorterValue := helpers.ShortenUrl(body.Url)
-        if !ok {
-            helpers.ReturnERR(w, "Error while trying to hash", nil)
+        var shorterValue string
+        shorterValue, err = helpers.ShortenUrl(body.Url)
+        if err != nil {
+            helpers.ReturnERR(w, "Error while trying to hash", err)
             return
         }
 
         // Insert result to DB
-        ok = db.InsertToRedis(body.Url, shorterValue)
-        ok2 := db.InsertToRedis(shorterValue, body.Url)
-        if !ok || !ok2 {
-            helpers.ReturnERR(w, "Error while trying to insert value to redis DB", nil)
+        err = redisClient.Set(body.Url, shorterValue, 1 * time.Hour)
+        err2 := redisClient.Set(shorterValue, body.Url, 1 * time.Hour)
+        if err2 != nil || err != nil {
+            helpers.ReturnERR(w, "Error while trying to insert value to redis DB", err)
             return
         }
 
-        ok = db.InsertToPostgres("url_to_short", [2]string{"real_url", "short"}, [2]string{body.Url, shorterValue})
-        ok2 = db.InsertToPostgres("short_to_url", [2]string{"short", "real_url"}, [2]string{shorterValue, body.Url})
-        if !ok {
-            helpers.ReturnERR(w, "Error while trying to insert value to postgres DB", nil)
+        err = dbClient.Insert("url_to_short", [2]string{"real_url", "short"}, [2]string{body.Url, shorterValue})
+        err2 = dbClient.Insert("short_to_url", [2]string{"short", "real_url"}, [2]string{shorterValue, body.Url})
+        if err != nil || err2 != nil{
+            helpers.ReturnERR(w, "Error while trying to insert value to postgres DB", err)
         } else {
             helpers.ReturnOK(w, baseShorterUrl + shorterValue)
         }
     }
-    
 }
+

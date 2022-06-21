@@ -1,43 +1,31 @@
 package db
 
 import (
-	"log"
-	"github.com/go-redis/redis"
-	"url-shortener/config"
 	"time"
+	"github.com/go-redis/redis"
 )
 
-var redisClient *redis.Client
-
-func GetFromRedis(key string) (bool, string) {
-	val, err := redisClient.Get(key).Result()
-	if err != nil && err != redis.Nil {
-		log.Println(err)
-		return false, "Failed to get value from redis"
-	}
-	return true, val
+type Redis interface {
+	Set(key string, value interface{}, exp time.Duration) error
+	Get(key string) (string, error)
 }
 
-func InsertToRedis(key, value string) (bool) {
-	err := redisClient.Set(key, value, 0).Err()
-    if err != nil {
-		log.Println(err)
-		return false
-	}
-	_, err = redisClient.Expire(key, 1 * time.Hour).Result()
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	return true
+type _redis struct {
+	Client redis.Cmdable
 }
 
-func init() {
-	var RedisConf config.RedisConf
-	config.GetEnv(&RedisConf)
-    redisClient = redis.NewClient(&redis.Options{
-		Addr: RedisConf.Address,
-		Password: RedisConf.Password,
-		DB: 0,
-	})
+func NewRedis(Client redis.Cmdable) Redis {
+	return &_redis{Client}
+}
+
+func (r *_redis) Get(key string) (string, error) {
+	res, err := r.Client.Get(key).Result()
+	if err == redis.Nil {
+		return "", nil
+	}
+	return res, err
+}
+
+func (r *_redis) Set(key string, value interface{}, exp time.Duration) error {
+	return r.Client.Set(key, value, exp).Err()
 }

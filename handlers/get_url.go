@@ -5,7 +5,6 @@ import (
     "github.com/gorilla/mux"
 
     "url-shortener/helpers"
-    "url-shortener/db"
 )
 
 func GetUrlHandler(w http.ResponseWriter, r *http.Request){
@@ -17,18 +16,18 @@ func GetUrlHandler(w http.ResponseWriter, r *http.Request){
         return
     }
 
-	// Try to get short URL value from Redis - return if it exists
-    ok, val := db.GetFromRedis(short)
-    if !ok {
+    // Try to get short URL value from Redis - return if it exists
+    val, err := redisClient.Get(short)
+    if err != nil {
         helpers.ReturnERR(w, val, nil)
         return
     }
 
     // Value is not on redis - try to fetch from DB
     if val == "" {
-        ok, val = db.GetFromPostgres("real_url", "short_to_url", "short", short)
-        if !ok {
-            helpers.ReturnERR(w, val, nil)
+        val, err = dbClient.FindByPkey("real_url", "short_to_url", "short", short)
+        if err != nil {
+            helpers.ReturnERR(w, val, err)
             return
         }
     }

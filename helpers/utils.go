@@ -30,16 +30,15 @@ func ReturnERR(w http.ResponseWriter, message string, err error){
     json.NewEncoder(w).Encode(m)
 }
 
-func ShortenUrl(url string) (bool, string) {
+func ShortenUrl(url string) (string, error) {
 	valueToHash := []byte(url)
 	// Hash original URL
 	hash, err := bcrypt.GenerateFromPassword(valueToHash, bcrypt.DefaultCost)
 	if err != nil {
-		log.Println(err)
-		return false, "Error while trying to hash"
+		return "", err
 	}
 	// Convert to Base 62 to allow correct url representation
 	generatedNumber := new(big.Int).SetBytes(hash).Int64()
 	shorterValue := base62.Encode(generatedNumber)[0:7]
-	return true, shorterValue
+	return shorterValue, nil
 }
