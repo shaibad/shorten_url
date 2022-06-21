@@ -8,6 +8,7 @@ import (
 
     "url-shortener/config"
     "url-shortener/helpers"
+    "url-shortener/db"
 )
 
 // Struct to represent a url
@@ -34,7 +35,7 @@ func ShortenUrlHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // Try to get short URL value from Redis - return if it exists
-    val, err := redisClient.Get(body.Url)
+    val, err := db.RedisClient.Get(body.Url)
     if err != nil {
         helpers.ReturnERR(w, val, nil)
         return
@@ -42,7 +43,7 @@ func ShortenUrlHandler(w http.ResponseWriter, r *http.Request) {
 
     // Value is not on redis - try to fetch from DB
     if val == "" {
-        val, err = dbClient.FindByPkey("short", "url_to_short", "real_url", body.Url)
+        val, err = db.DbClient.FindByPkey("short", "url_to_short", "real_url", body.Url)
         if err != nil {
             helpers.ReturnERR(w, val, err)
             return
@@ -61,15 +62,15 @@ func ShortenUrlHandler(w http.ResponseWriter, r *http.Request) {
         }
 
         // Insert result to DB
-        err = redisClient.Set(body.Url, shorterValue, 1 * time.Hour)
-        err2 := redisClient.Set(shorterValue, body.Url, 1 * time.Hour)
+        err = db.RedisClient.Set(body.Url, shorterValue, 1 * time.Hour)
+        err2 := db.RedisClient.Set(shorterValue, body.Url, 1 * time.Hour)
         if err2 != nil || err != nil {
             helpers.ReturnERR(w, "Error while trying to insert value to redis DB", err)
             return
         }
 
-        err = dbClient.Insert("url_to_short", [2]string{"real_url", "short"}, [2]string{body.Url, shorterValue})
-        err2 = dbClient.Insert("short_to_url", [2]string{"short", "real_url"}, [2]string{shorterValue, body.Url})
+        err = db.DbClient.Insert("url_to_short", [2]string{"real_url", "short"}, [2]string{body.Url, shorterValue})
+        err2 = db.DbClient.Insert("short_to_url", [2]string{"short", "real_url"}, [2]string{shorterValue, body.Url})
         if err != nil || err2 != nil{
             helpers.ReturnERR(w, "Error while trying to insert value to postgres DB", err)
         } else {

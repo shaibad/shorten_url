@@ -7,6 +7,7 @@ import (
 
 	"url-shortener/config"
 	"url-shortener/handlers"
+	"url-shortener/db"
 )
 
 func handle(conf config.HandlerTypeConf) {
@@ -29,5 +30,6 @@ func main() {
 	var HandlerTypeConf config.HandlerTypeConf
 	config.GetEnv(&HandlerTypeConf)
 
+	db.InitConnections()
 	handle(HandlerTypeConf)
 }

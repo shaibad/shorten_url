@@ -1,23 +1,22 @@
-package handlers
+package db
 
 import (
 	"fmt"
 
 	"url-shortener/config"
-	"url-shortener/db"
 
 	"github.com/go-redis/redis"
 )
 
-var redisClient db.Redis
-var dbClient db.DB
+var RedisClient Redis
+var DbClient DB
 
-func init () {
-	// Init DB connections
+// Init DB connections
+func InitConnections() {
 	var RedisConf config.RedisConf
 	var PostgresConf config.PostgresConf
 	var err error
-	
+
 	config.GetEnv(&RedisConf)
 	config.GetEnv(&PostgresConf)
 
@@ -26,11 +25,11 @@ func init () {
 		Password: RedisConf.Password,
 		DB: 0,
 	})
-	redisClient = db.NewRedis(client)
+	RedisClient = NewRedis(client)
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", 
 	PostgresConf.Host, PostgresConf.Port, PostgresConf.User, PostgresConf.Password)	
-	dbClient, err = db.NewDB("postgres", psqlInfo)
+	DbClient, err = NewDB("postgres", psqlInfo)
 	if err != nil {
 		panic("Error, could not connect to DB")
 	}

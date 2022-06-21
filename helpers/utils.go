@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 	"encoding/json"
+	"errors"
 )
 
 func ReturnOK(w http.ResponseWriter, value string){
@@ -31,6 +32,9 @@ func ReturnERR(w http.ResponseWriter, message string, err error){
 }
 
 func ShortenUrl(url string) (string, error) {
+	if url == "" {
+		return "", errors.New("URL can't be empty")
+	}
 	valueToHash := []byte(url)
 	// Hash original URL
 	hash, err := bcrypt.GenerateFromPassword(valueToHash, bcrypt.DefaultCost)

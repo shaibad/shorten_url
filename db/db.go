@@ -49,4 +49,3 @@ func (r *DBClient) Insert(tableName string, valueKeys, values [2]string) error {
 func (r *DBClient) Close() {
 	r.db.Close()
 }
-
