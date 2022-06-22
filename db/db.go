@@ -14,7 +14,7 @@ type DB interface {
 }
 
 type DBClient struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
 func NewDB(kind, info string) (DB, error) {
@@ -29,7 +29,7 @@ func NewDB(kind, info string) (DB, error) {
 func (r *DBClient) FindByPkey(valueToSelect, tableName, pkey, value string) (string, error) {
 	var result string
 	s := fmt.Sprintf(`SELECT %s FROM %s WHERE %s = $1`, valueToSelect, tableName, pkey)
-	err := r.db.QueryRow(s, value).Scan(&result)
+	err := r.Db.QueryRow(s, value).Scan(&result)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println(err)
 		return "", err
@@ -39,7 +39,7 @@ func (r *DBClient) FindByPkey(valueToSelect, tableName, pkey, value string) (str
 
 func (r *DBClient) Insert(tableName string, valueKeys, values [2]string) error {
 	statement := fmt.Sprintf(`INSERT INTO %s (%s, %s) VALUES ($1, $2)`, tableName, valueKeys[0], valueKeys[1])
-	_, err := r.db.Exec(statement, values[0], values[1])
+	_, err := r.Db.Exec(statement, values[0], values[1])
 	if err != nil {
 		return err
 	}
@@ -47,5 +47,5 @@ func (r *DBClient) Insert(tableName string, valueKeys, values [2]string) error {
 }
 
 func (r *DBClient) Close() {
-	r.db.Close()
+	r.Db.Close()
 }
