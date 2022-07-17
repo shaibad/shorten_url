@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: get-url-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      component: get
+  template:
+    metadata:
+      labels:
+        component: get
+    spec:
+      containers:
+        - name: get-url
+          image: shaibad/multi-shorten-url
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: env-config-map
+          env:
+            - name: HANDLER_PATH
+              value: /{short}
+            - name: HANDLER_METHOD
+              value: GET
+            - name: HANDLER_PORT
+              value: '8080'
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD

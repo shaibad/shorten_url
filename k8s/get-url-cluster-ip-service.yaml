@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: get-url-cluster-ip-service
+spec:
+  type: ClusterIP
+  selector:
+    component: get
+  ports:
+    - port: 8080
+      targetPort: 8080

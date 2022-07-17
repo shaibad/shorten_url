@@ -23,6 +23,7 @@ func handle(conf config.HandlerTypeConf) {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc(conf.Path, handler).Methods(conf.Method)
+	log.Println("Starting server on port:", conf.Port)
 	log.Fatal(http.ListenAndServe(":"+conf.Port, router))
 }
 
@@ -30,6 +31,9 @@ func main() {
 	var HandlerTypeConf config.HandlerTypeConf
 	config.GetEnv(&HandlerTypeConf)
 
-	db.InitConnections()
+	err := db.InitConnections()
+	if err != nil {
+		log.Fatal("ERROR, could not connect to DB")
+	}
 	handle(HandlerTypeConf)
 }

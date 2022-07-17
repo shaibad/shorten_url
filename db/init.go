@@ -12,7 +12,7 @@ var RedisClient Redis
 var DbClient DB
 
 // Init DB connections
-func InitConnections() {
+func InitConnections() error{
 	var RedisConf config.RedisConf
 	var PostgresConf config.PostgresConf
 	var err error
@@ -31,6 +31,7 @@ func InitConnections() {
 	PostgresConf.Host, PostgresConf.Port, PostgresConf.User, PostgresConf.Password)	
 	DbClient, err = NewDB("postgres", psqlInfo)
 	if err != nil {
-		panic("Error, could not connect to DB")
+		return err
 	}
+	return nil
 }
